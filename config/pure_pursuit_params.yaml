@@ -1,0 +1,6 @@
+/pure_pursuit_node:
+  ros__parameters:
+    K_p: 0.5 #0.25 #0.5
+    lookAhead: 1.5 #1.5 #2.0
+    speed: 1.0 #2.0 #2.0 #5.0
+    waypoints_path: src/zedx_pure_pursuit/path/waypoints.csv
