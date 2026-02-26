@@ -61,7 +61,7 @@ public:
     PurePursuit() : Node("pure_pursuit_node")
     {   
         // parameters
-        waypoints_path = this->declare_parameter<std::string>("waypoints_path", "src/zedx_pure_pursuit/path/way_points.csv");
+        waypoints_path = this->declare_parameter<std::string>("waypoints_path", "src/zedx_pure_pursuit/path/waypoints.csv");
         this->declare_parameter<double>("lookAhead", 0.5);
         this->declare_parameter<double>("K_p", 0.5);
         this->declare_parameter<double>("speed", 1.0);
