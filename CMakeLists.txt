@@ -53,9 +53,10 @@ ament_python_install_package(${PROJECT_NAME})
 
 # Install Python executables
 install(PROGRAMS
-  scripts/zedx_localization_bridge.py
-  scripts/collect_waypoints.py
-  scripts/zedx_positional_tracking.py
+  scripts/zedx_localization.py
+  scripts/zedx_mapping.py
+  scripts/waypoints.py
+  scripts/pure_pursuit_node.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
