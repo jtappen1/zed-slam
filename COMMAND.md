@@ -7,6 +7,32 @@ source install/setup.bash
 ros2 launch f1tenth_stack no_lidar_bringup_launch.py
 ```
 
+## Run Foxglove Bridge:
+(f1tenth_ws)    
+```
+cd ~/f1tenth_ws/
+source /opt/ros/humble/setup.bash
+source install/setup.bash
+ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765
+```
+
+## To run the positional tracking:
+(zed_ws)    
+```
+source /opt/ros/humble/setup.bash
+source install/setup.bash
+ros2 run zedx_pure_pursuit zedx_localization.py
+```
+
+## To run waypoints:
+(zed_ws)
+```
+source /opt/ros/humble/setup.bash
+source install/setup.bash
+ros2 run zedx_pure_pursuit waypoints.py 
+```
+----------------------------------------------------------------------------------
+
 ## To run the positional tracking and ZedX camera:
 (zed_ws)    
 ```
@@ -20,7 +46,7 @@ ros2 launch zed_wrapper zed_camera.launch.py camera_model:=zedx positional_track
 ```
 source /opt/ros/humble/setup.bash
 source install/setup.bash
-ros2 run zed_pure_pursuit 
+ros2 run zedx_pure_pursuit zedx_localization_bridge.py
 ```
 
 ## Run pure pursuit: 

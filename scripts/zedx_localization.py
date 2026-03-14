@@ -6,19 +6,21 @@ from geometry_msgs.msg import PoseStamped
 import pyzed.sl as sl
 from geometry_msgs.msg import TransformStamped
 from tf2_ros import TransformBroadcaster
+import argparse
+
 
 class ZEDPositionalTrackingNode(Node):
     def __init__(self):
         super().__init__('zed_positional_tracking_node')
         self.pose_pub = self.create_publisher(PoseStamped, '/zed/zed_node/pose', 10)
-
+    
         self.tf_broadcaster = TransformBroadcaster(self)
 
         # ---------------- Camera Init ----------------
         self.zed = sl.Camera()
         init_params = sl.InitParameters()
         init_params.camera_resolution = sl.RESOLUTION.SVGA
-        init_params.camera_fps = 30
+        init_params.camera_fps = 15
         init_params.coordinate_units = sl.UNIT.METER
         init_params.coordinate_system = sl.COORDINATE_SYSTEM.RIGHT_HANDED_Z_UP
         init_params.depth_mode = sl.DEPTH_MODE.NEURAL_LIGHT
@@ -28,17 +30,19 @@ class ZEDPositionalTrackingNode(Node):
             rclpy.shutdown()
             return
 
+        # self.update_map = args.update_map
+        # self.area_file = args.area_file
         # ---------------- Tracking Init ----------------
         tracking_params = sl.PositionalTrackingParameters()
         tracking_params.mode = sl.POSITIONAL_TRACKING_MODE.GEN_3
         tracking_params.enable_area_memory = True
-        tracking_params.enable_localization_only = True
+        tracking_params.enable_localization_only = False
         tracking_params.enable_imu_fusion = True
         tracking_params.set_gravity_as_origin = True
         tracking_params.enable_2d_ground_mode = False
-        tracking_params.area_file_path = (
-            "/home/nvidia/zed_ws/src/zedx_pure_pursuit/path/levine_hallway.area"
-        )
+        # print(f"AREA FILE: {self.area_file}")
+        # print(f"Save Map: {self.update_map}")
+        tracking_params.area_file_path = "/home/nvidia/zed_ws/src/zedx_pure_pursuit/path/levine_hallway.area"
 
         self.zed.enable_positional_tracking(tracking_params)
 
@@ -83,6 +87,8 @@ class ZEDPositionalTrackingNode(Node):
 
                 t = self.pose.get_translation(sl.Translation())
                 x, y, z = t.get()
+                o = self.pose.get_orientation(sl.Orientation())
+                x_or, y_or, z_or, w_or = o.get()
 
                 # Build PoseStamped
                 msg = PoseStamped()
@@ -95,10 +101,10 @@ class ZEDPositionalTrackingNode(Node):
                 msg.pose.position.z = z
 
                 # Identity orientation
-                msg.pose.orientation.w = 1.0
-                msg.pose.orientation.x = 0.0
-                msg.pose.orientation.y = 0.0
-                msg.pose.orientation.z = 0.0
+                msg.pose.orientation.x = x_or
+                msg.pose.orientation.y = y_or
+                msg.pose.orientation.z = z_or
+                msg.pose.orientation.w = w_or
 
                 self.pose_pub.publish(msg)
 
@@ -118,6 +124,10 @@ class ZEDPositionalTrackingNode(Node):
 
         except KeyboardInterrupt:
             pass
+            # if self.update_map:
+            #     self.get_logger().info("Stopping tracking. Saving map...")
+            #     self.zed.save_area_map(self.area_file)
+            
         finally:
             self.destroy_node()
 
@@ -129,6 +139,19 @@ class ZEDPositionalTrackingNode(Node):
 
 
 def main(args=None):
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument(
+    #     "--update-map",
+    #     action="store_true",
+    #     help="Update area file"
+    # )
+    # parser.add_argument(
+    #     "--area-file",
+    #     type=str,
+    #     default="",
+    #     help="Path to ZED area file"
+    # )
+    # parsed_args, ros_args = parser.parse_known_args()
     rclpy.init(args=args)
     node = ZEDPositionalTrackingNode()
     try:

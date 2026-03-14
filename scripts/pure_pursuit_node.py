@@ -16,6 +16,8 @@ from geometry_msgs.msg import PointStamped
 from tf2_geometry_msgs import do_transform_point
 from tf_transformations import euler_from_quaternion
 from visualization_msgs.msg import MarkerArray, Marker
+from geometry_msgs.msg import PoseStamped
+
 
 
 class PurePursuit(Node):
@@ -26,7 +28,7 @@ class PurePursuit(Node):
     def __init__(self):
         super().__init__('pure_pursuit_node')
         self.odom_sub = self.create_subscription(
-            Odometry,
+            PoseStamped,
             "/zed/zed_node/pose",
             self.pose_callback,
             10
@@ -36,7 +38,7 @@ class PurePursuit(Node):
             "/drive",
             10
         )
-        pkg_path = get_package_share_directory('pure_pursuit')
+        pkg_path = get_package_share_directory('zedx_pure_pursuit')
         yaml_path = os.path.join(pkg_path, 'config', 'pure_pursuit.yaml')
         self.declare_parameter('yaml_path', yaml_path)
         yaml_path = self.get_parameter('yaml_path').value
@@ -198,22 +200,25 @@ class PurePursuit(Node):
 
     def pose_callback(self, pose_msg):
         velocity = self.velocity
-        orientation = pose_msg.pose.pose.orientation
+        orientation = pose_msg.pose.orientation
         _, _, yaw = euler_from_quaternion([orientation.x, orientation.y, orientation.z, orientation.w])
-        world_coords = np.array([pose_msg.pose.pose.position.x, pose_msg.pose.pose.position.y])
-        local_coords = self.map_to_base(world_coords)
-        if local_coords is None:
-            return 
+        world_coords = np.array([pose_msg.pose.position.x, pose_msg.pose.position.y])
+        print("----------------------------------------------")
+        print(f"World Coords: {world_coords}")
             
         goal_world = self.compute_lookahead_pt(world_coords, yaw)
+        print(f"Goal World: {goal_world}")
 
         goal_local = self.map_to_base(goal_world)
         if goal_local is None:
             return 
 
+        print(f"Goal Local: {goal_local}")
+        print(f"Yaw : {yaw}")
+
         self.publish_goal_marker(goal_world)
 
-        wheelbase = 0.33
+        wheelbase = 0.1
         curvature = 2 * goal_local[1] / (self.lookahead**2)
         steering_angle = np.arctan(wheelbase * curvature)
 
