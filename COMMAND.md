@@ -21,8 +21,17 @@ ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765
 ```
 source /opt/ros/humble/setup.bash
 source install/setup.bash
-ros2 run zedx_pure_pursuit zedx_localization.py
+ros2 run zedx_pure_pursuit fast_localization.py
 ```
+
+## To run the mapping:
+(zed_ws)    
+```
+source /opt/ros/humble/setup.bash
+source install/setup.bash
+ros2 run zedx_pure_pursuit zedx_mapping.py
+```
+
 
 ## To run waypoints:
 (zed_ws)

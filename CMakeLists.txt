@@ -57,6 +57,10 @@ install(PROGRAMS
   scripts/zedx_mapping.py
   scripts/waypoints.py
   scripts/pure_pursuit_node.py
+  scripts/record_svo.py
+  scripts/mesh_visualizer.py
+  scripts/calc_hz.py
+  scripts/fast_localization.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
