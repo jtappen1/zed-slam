@@ -1,4 +1,0 @@
-fps: 30
-area_file: "/home/nvidia/zed_ws/src/zedx_pure_pursuit/path/levine_fast.area"
-update_map: false
-mapping : false

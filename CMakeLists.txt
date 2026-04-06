@@ -36,31 +36,17 @@ include_directories(
   ${EIGEN3_INCLUDE_DIRS}
 )
 
-# Create Cpp executable
-add_executable(pure_pursuit_node src/pure_pursuit_node.cpp) # utils/csvLoader.cpp
-
-ament_target_dependencies(pure_pursuit_node 
-  rclcpp geometry_msgs ackermann_msgs nav_msgs sensor_msgs std_msgs visualization_msgs tf2_ros tf2_geometry_msgs
-)
-
-# Install Cpp executables
-install(TARGETS
-  pure_pursuit_node
-  DESTINATION lib/${PROJECT_NAME})
-
 # Install Python modules
 ament_python_install_package(${PROJECT_NAME})
 
 # Install Python executables
 install(PROGRAMS
-  scripts/zedx_localization.py
-  scripts/zedx_mapping.py
-  scripts/waypoints.py
-  scripts/pure_pursuit_node.py
-  scripts/record_svo.py
-  scripts/mesh_visualizer.py
-  scripts/calc_hz.py
-  scripts/fast_localization.py
+  scripts/pure_pursuit/waypoints.py
+  scripts/pure_pursuit/pure_pursuit_node.py
+  scripts/utils/mesh_visualizer.py
+  scripts/utils/calc_hz.py
+  scripts/zed_record.py
+  scripts/zed_slam.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
@@ -68,9 +54,6 @@ install(DIRECTORY config
   DESTINATION share/${PROJECT_NAME}
 )
 
-install(DIRECTORY path
-  DESTINATION share/${PROJECT_NAME}
-)
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights
