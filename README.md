@@ -1,6 +1,6 @@
 # ZedX Roboracer Package
 
-> **Package integrating Stereolabs ZedX with the Roboracer Platform**
+> **Stereolabs ZedX integration with the Roboracer Platform**
 
 ```
 Platform:   NVIDIA Jetson · ROS 2 Humble
@@ -12,7 +12,7 @@ Language:   Python 3
   
 ## Overview
 
-This repo contains a lightweight and minimal implementation of SLAM, meshing, and Pure Pursuit with the Stereolabs ZEDX camera, set up to work with the Roboracer (previously F1/10th) platform.  Due to the edge compute constraints of the Roboracer platform, this package contains the minimal stack needed to allow mapping/localization with the ZEDX.  For those needing more comprehensive topics fine-grain control, the [ZEDX ROS2 wrapper](https://github.com/stereolabs/zed-ros2-wrapper) provides that support at the cost of higher compute.  This repo also details integration with other F1/10th systems needed to run a full autonomy stack on the Roboracer platform.
+This repo contains a lightweight and minimal implementation of SLAM, meshing, and Pure Pursuit with the Stereolabs ZEDX camera, set up to work with the Roboracer (previously F1/10th) platform.  Due to the edge compute constraints of the Roboracer platform, this package contains the minimal stack needed to allow mapping/localization with the ZEDX.  For those needing more comprehensive topics and fine-grain control, the [ZEDX ROS2 wrapper](https://github.com/stereolabs/zed-ros2-wrapper) provides that support at the cost of higher compute.  This repo also details integration with other F1/10th systems needed to run a full autonomy stack on the Roboracer platform. Information on setting up the ZEDX hardware can be found in the [SETUP.md](./SETUP.md) file.
   
 <p align="center">
   <img src="./data/img/IMG_7968.jpeg" width="40%"/>
@@ -115,15 +115,20 @@ python zed_record.py --fps 30 --resolution SVGA --dir /path/to/output
 
 ---
 
-## Configuration
+## Meshing
 
-[Describe any config files, how to tune parameters, tips for different environments, etc.]
+The ZED SDK support generating high fidelity meshes through both on and offline spatial mapping. More documentation can be found on in the [ZED Spatial Mapping docs](https://www.stereolabs.com/docs/spatial-mapping), but through testing accurate meshes have been created by recording an svo file of the area and using the ZEDfu to perform offline spatial mapping of the area.  The best meshing is done carrying the camera at stable height upright and walking slowly through the area. Through the svo file and ZEDfu application, positional tracking is automatically calculated and can be used to create both area files and meshes of the area.
+
+<p align="center">
+  <img src="./data/img/IMG_7968.jpeg" width="40%"/>
+  <em>Example of a mesh generated of an outdoor track using the above method.</em>
+</p>
 
 ---
 
-## Map Files
+## Map (.area) Files
+More information on .area files and the VSLAM mapping process can be found on the [ZED SDK docs](https://www.stereolabs.com/docs/positional-tracking/area-memory)
 
-[Describe how area maps work in your setup — where they're stored, how to name them, when to remap, etc.]
 
 ---
 
@@ -134,24 +139,3 @@ python zed_record.py --fps 30 --resolution SVGA --dir /path/to/output
 | `ZED Camera failed to open` | Camera not connected or permissions | Check USB/power, run `ZED_Explorer` |
 | Tracking state `LOST` immediately | Bad area file or wrong starting pose | Re-map or clear area file |
 | No topics publishing | Node crashed silently | Check `ros2 node list` and logs |
-| [Add your own] | | |
-
----
-
-## Known Issues
-
-- [ ] [Issue or limitation 1]
-- [ ] [Issue or limitation 2]
-
----
-
-## Roadmap
-
-- [ ] [Planned feature 1]
-- [ ] [Planned feature 2]
-
----
-
-## License
-
-[License name] — see [`LICENSE`](LICENSE) for details.
