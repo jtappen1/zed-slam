@@ -11,11 +11,13 @@ import yaml
 import threading
 import time
 from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus
+from nav_msgs.msg import Path
+import copy
 
-
+MIN_DIST_SQ = 0.5 ** 2
 
 RESOLUTIONS = {
-    "HD2K":   sl.RESOLUTION.HD2K,
+    "HD1200":   sl.RESOLUTION.HD1200,
     "HD1080": sl.RESOLUTION.HD1080,
     "SVGA":   sl.RESOLUTION.SVGA,
 }
@@ -33,6 +35,10 @@ class ZEDSLAMNode(Node):
         super().__init__('zed_positional_tracking_node')
         self.pose_pub = self.create_publisher(PoseStamped, '/zed/zed_node/pose', 10)
         self.status_pub = self.create_publisher(DiagnosticArray, '/zed/spatial_memory_status', 10)
+        self.path_pub = self.create_publisher(Path, '/zed/path', 10)
+        self.path_msg = Path()
+        self.path_msg.header.frame_id = "map"
+        
         self.last_mem_status = None
 
         self.tf_broadcaster = TransformBroadcaster(self)
@@ -97,6 +103,17 @@ class ZEDSLAMNode(Node):
         self.grab_thread.start()
         self.get_logger().info("ZED Positional Tracking Node started")
 
+    def _moved_enough(self, x, y, z):
+        if not self.path_msg.poses:
+            return True
+        last = self.path_msg.poses[-1].pose.position
+        dx, dy, dz = x - last.x, y - last.y, z - last.z
+        return dx*dx + dy*dy + dz*dz > MIN_DIST_SQ
+
+    def publish_path(self):
+        self.path_msg.header.stamp = self.get_clock().now().to_msg()
+        self.path_pub.publish(self.path_msg)
+
     def grab_loop(self):
         while self.running and rclpy.ok():
             if self.zed.grab(self.runtime_params) != sl.ERROR_CODE.SUCCESS:
@@ -110,15 +127,17 @@ class ZEDSLAMNode(Node):
                 continue
             
             mem_status = self.zed.get_positional_tracking_status().spatial_memory_status
-            if mem_status != self.last_mem_status:
-                msg = DiagnosticArray()
-                msg.header.stamp = self.get_clock().now().to_msg()
-                status = DiagnosticStatus()
-                status.message = STATUS_MAP.get(mem_status, "UNKNOWN")
-                msg.status = [status]
 
-                self.status_pub.publish(msg)
+            if mem_status != self.last_mem_status:
+                self.get_logger().info(f"Memory status changed: {STATUS_MAP.get(mem_status, 'UNKNOWN')}")
                 self.last_mem_status = mem_status
+
+            msg = DiagnosticArray()
+            msg.header.stamp = self.get_clock().now().to_msg()
+            status = DiagnosticStatus()
+            status.message = STATUS_MAP.get(mem_status, "UNKNOWN")
+            msg.status = [status]
+            self.status_pub.publish(msg)
 
             # ---------------- Pose Publish ----------------
             t = self.pose.get_translation(sl.Translation())
@@ -128,8 +147,8 @@ class ZEDSLAMNode(Node):
 
             stamp = self.get_clock().now().to_msg()
             self.pose_msg.header.stamp = stamp
-            self.pose_msg.pose.position.x = y
-            self.pose_msg.pose.position.y = -x
+            self.pose_msg.pose.position.x = x
+            self.pose_msg.pose.position.y = y
             self.pose_msg.pose.position.z = z
             self.pose_msg.pose.orientation.x = x_or
             self.pose_msg.pose.orientation.y = y_or
@@ -141,14 +160,19 @@ class ZEDSLAMNode(Node):
             # ---------------- Transform Publish ----------------
             # TODO: Test this
             self.tform.header.stamp = stamp
-            self.tform.transform.translation.x = y
-            self.tform.transform.translation.y = -x
+            self.tform.transform.translation.x = x
+            self.tform.transform.translation.y = y
             self.tform.transform.translation.z = z
             self.tform.transform.rotation = self.pose_msg.pose.orientation
 
             self.tf_broadcaster.sendTransform(self.tform)
 
-            time.sleep(0.001)  # small sleep to yield CPU
+            self.path_msg.poses = self.path_msg.poses[-500:]
+
+            if self._moved_enough(x, y, z):
+                self.path_msg.poses.append(copy.deepcopy(self.pose_msg))
+                self.publish_path()
+
 
     # ---------------- Shutdown ----------------
     def destroy_node(self):

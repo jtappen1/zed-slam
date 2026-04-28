@@ -23,7 +23,7 @@ RESOLUTIONS = {
 def parse_args():
     parser = argparse.ArgumentParser(description="Record ZED camera to an SVO file.")
     parser.add_argument("--output", default="test_svo.svo2", help="Output .svo2 file path")
-    parser.add_argument("--dir", default="/home/nvidia/zed_ws/src/zedx_pure_pursuit/data/svo", help="Output directory")
+    parser.add_argument("--dir", default="/home/nvidia/ros2_ws/src/zedx_pure_pursuit/data/svo", help="Output directory")
     parser.add_argument("--fps", type=int, default=60, choices=[15, 30, 60, 120], help="Camera FPS (default: 60)")
     parser.add_argument("--resolution", default="SVGA", choices=RESOLUTIONS.keys(), help="Camera resolution (default: SVGA)")
     return parser.parse_args()
