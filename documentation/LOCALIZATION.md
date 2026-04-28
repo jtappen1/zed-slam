@@ -6,13 +6,7 @@
 
 ------------------------------------------------------------------------
 
-## 1. Start Up System
-
-Ensure that the bringup script and Foxglove bridge are running.
-
-------------------------------------------------------------------------
-
-## 2. Set Desired Configuration
+## 1. Set Desired Configuration
 
 Navigate to:
 
@@ -25,7 +19,7 @@ Ensure the correct area file path is set under `area_file`.
 
 ------------------------------------------------------------------------
 
-## 3. Start the SLAM Script
+## 2. Start the SLAM Script
 
 Start localization from a **feature-dense area**, preferably the same
 location where mapping began. This improves convergence from
@@ -39,7 +33,7 @@ ros2 launch zed_slam zed_slam.launch.py mode:=localize
 
 ------------------------------------------------------------------------
 
-## 4. Visualizing Localization
+## 3. Visualizing Localization
 
 If setup is correct, open Foxglove and verify that the camera frame
 appears in the correct position.
@@ -79,7 +73,7 @@ https://www.stereolabs.com/docs/positional-tracking/positional-tracking-status#s
 
 ------------------------------------------------------------------------
 
-## 5. Localization Procedure
+## 4. Localization Procedure
 
 -   On startup, the system begins in `INITIALIZING`
 -   Once it transitions to `KNOWN_MAP`, begin driving along a path
@@ -107,7 +101,7 @@ Ctrl + C
 
 ------------------------------------------------------------------------
 
-## 6. Lifetime Mapping
+## 5. Lifetime Mapping
 
 Running SLAM with the `lifetime` mode enables continuous map updates.
 

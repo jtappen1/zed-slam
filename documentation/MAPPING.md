@@ -5,34 +5,7 @@
 
 ------------------------------------------------------------------------
 
-## 1. Start Up System
-
-Start the bringup script and Foxglove bridge (see `COMMAND.md` for
-reference).
-
-### Bringup Script
-
-``` bash
-# (f1tenth_ws)
-cd ~/f1tenth_ws
-source /opt/ros/humble/setup.bash
-source install/setup.bash
-ros2 launch f1tenth_stack no_lidar_bringup_launch.py
-```
-
-### Foxglove Bridge
-
-``` bash
-# (f1tenth_ws)
-cd ~/f1tenth_ws
-source /opt/ros/humble/setup.bash
-source install/setup.bash
-ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765
-```
-
-------------------------------------------------------------------------
-
-## 2. Set Desired Configuration
+## 1. Set Desired Configuration
 
 Navigate to:
 
@@ -48,7 +21,7 @@ Set your desired mapping configuration.
 
 ------------------------------------------------------------------------
 
-## 3. Start the SLAM Script
+## 2. Start the SLAM Script
 
 Launch SLAM in mapping mode:
 
@@ -58,7 +31,7 @@ ros2 launch zed_slam zed_slam.launch.py mode:=mapping
 
 ------------------------------------------------------------------------
 
-## 4. Visualizing the Mapping
+## 3. Visualizing the Mapping
 
 1.  Download the layout file:
 
@@ -115,7 +88,7 @@ https://www.stereolabs.com/docs/positional-tracking/positional-tracking-status#s
 
 ------------------------------------------------------------------------
 
-## 5. Mapping Procedure
+## 4. Mapping Procedure
 
 Drive the vehicle through the environment while following these
 guidelines:
@@ -130,7 +103,7 @@ https://www.stereolabs.com/docs/positional-tracking/area-memory#mapping-procedur
 
 ------------------------------------------------------------------------
 
-## 6. Saving the Map
+## 5. Saving the Map
 
 Once mapping is complete:
 

@@ -81,8 +81,7 @@ source install/setup.bash
 ---
 
 ## Usage
-NOTE: See [COMMAND.md](./documentation/COMMAND.md) for the step by step list of commands to run the full Roboracer stack.
-
+  
 ### Mapping (build new map)
 Follow the steps in [MAPPING.md](./documentation/MAPPING.md)
 
