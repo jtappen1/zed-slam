@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>zedx_pure_pursuit</name>
+  <name>zed_slam</name>
   <version>0.0.0</version>
-  <description>f1tenth pure_pursuit</description>
+  <description>f1tenth vslam with zed cameras</description>
   <maintainer email="jtappen@seas.upenn.edu">jtappen</maintainer>
   <license>MIT</license>
 

@@ -6,7 +6,7 @@
     depth_mode: "NEURAL_LIGHT"  # Options: NEURAL, NEURAL_LIGHT, NEURAL_PLUS
 
     # Map / Area File
-    area_file: "/home/nvidia/ros2_ws/src/zedx_pure_pursuit/data/maps/test_svga_60.area"
+    area_file: "/home/nvidia/ros2_ws/src/zed_slam/data/maps/test.area"
 
     # Mapping Mode
     # initial_mapping: true  -> build a brand-new map

@@ -40,7 +40,7 @@ MODE_OVERRIDES = {
 
 
 def _launch_setup(context, *args, **kwargs):
-    pkg_share = get_package_share_directory('zedx_pure_pursuit')
+    pkg_share = get_package_share_directory('zed_slam')
     config_file = os.path.join(pkg_share, 'config', 'localize.yaml')
 
     mode = LaunchConfiguration('mode').perform(context)
@@ -53,7 +53,7 @@ def _launch_setup(context, *args, **kwargs):
     overrides = MODE_OVERRIDES[mode]
 
     node = Node(
-        package='zedx_pure_pursuit',
+        package='zed_slam',
         executable='zed_slam.py',
         name='zed_slam_node',
         output='screen',

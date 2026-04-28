@@ -1,6 +1,6 @@
-# ZedX Roboracer Package
+# Roboracer SLAM with ZED Cameras
 
-> **Stereolabs ZedX integration with the Roboracer Platform**
+> **Stereolabs ZED SLAM integration with the Roboracer Platform**
 
 ```
 Platform:   NVIDIA Jetson · ROS 2 Humble
@@ -12,10 +12,10 @@ Language:   Python 3 & C++
   
 ## Overview
 
-This repo contains a lightweight and minimal implementation of VSLAM, meshing, and Pure Pursuit with the Stereolabs ZEDX camera, set up to work with the Roboracer (previously F1Tenth) platform.  It contains the first steps toward a robust 3D localization solution for the F1Tenth platform.  Due to the edge compute constraints of the Roboracer platform, this package contains the minimal stack needed to allow mapping/localization with the ZEDX.  For those needing more comprehensive topics and fine-grain control, the [ZEDX ROS2 wrapper](https://github.com/stereolabs/zed-ros2-wrapper) provides that support at the cost of higher compute.  This repo also details integration with other F1Tenth systems needed to run a full autonomy stack on the Roboracer platform. Information on setting up the ZEDX hardware can be found in the [SETUP.md](./SETUP.md) file.  ZED SDK documentation can be found [here](https://www.stereolabs.com/docs/zed-ecosystem).
+This repo contains a lightweight and minimal implementation of VSLAM, meshing, and Pure Pursuit with the Stereolabs ZEDX camera, set up to work with the Roboracer (previously F1Tenth) platform.  It contains the first steps toward a robust 3D localization solution for the F1Tenth platform.  Due to the edge compute constraints of the Roboracer platform, this package contains the minimal stack needed to allow mapping/localization with the ZEDX.  For those needing more comprehensive topics and fine-grain control, the [ZEDX ROS2 wrapper](https://github.com/stereolabs/zed-ros2-wrapper) provides that support at the cost of higher compute.  This repo also details integration with other F1Tenth systems needed to run a full autonomy stack on the Roboracer platform. Information on setting up the ZEDX hardware can be found in the [SETUP.md](./documentation/SETUP.md) file.  ZED SDK documentation can be found [here](https://www.stereolabs.com/docs/zed-ecosystem).
   
 <p align="center">
-  <img src="./data/img/IMG_7968.jpeg" width="40%"/><br/>
+  <img src="./data/img/f1tenth.jpeg" width="40%"/><br/>
   <em>F1Tenth car with mounted ZEDX.</em>
 </p>
 
@@ -25,14 +25,17 @@ This repo contains a lightweight and minimal implementation of VSLAM, meshing, a
 
 ### `zed_slam_node`
 
-Lightweight node that runs positional tracking on the ZED X and publishes pose + spatial memory status.
+ The primary node for positional tracking, publishes pose + spatial memory status. It leverages the ZED SDK's Gen 3 tracking engine for improved loop closure and drift correction.
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
 | `fps` | int | `30` | Camera framerate |
 | `resolution` | string | `SVGA` | Camera resolution (`HD2K`, `HD1080`, `SVGA`) |
+| `depth_mode` | string | `NEURAL_LIGHT` | Neural Depth Model used for depth estimation|
 | `area_file` | string | `''` | Path to `.area` map file |
 | `initial_mapping` | bool | `false` | If true, builds a new map instead of localizing on provided area file|
+| `update_map` | bool | `false` | If true, saves/updates area file after mapping/localization is completed|
+
 
 **Published Topics**
 
@@ -40,6 +43,7 @@ Lightweight node that runs positional tracking on the ZED X and publishes pose +
 |---|---|---|
 | `/zed/zed_node/pose` | `geometry_msgs/PoseStamped` | Camera pose in map frame |
 | `/zed/spatial_memory_status` | `diagnostic_msgs/DiagnosticArray` | Spatial memory state changes |
+| `/zed/path` | `nav_msgs/msg/Path` | Path taken when mapping/localizing
 
 **Broadcast Transforms**
 
@@ -66,36 +70,28 @@ Records ZED camera output to an `.svo2` file for offline meshing.
 ### Installation
 
 ```bash
-cd ~/zed_ws/src
-git clone https://github.com/jtappen1/zedx_pure_pursuit.git
-cd ~/zed_ws
-colcon build --packages-select zedx_pure_pursuit
+mkdir ~/f1tenth_ws/src
+cd ~/f1tenth_ws/src
+git clone git@github.com:jtappen1/zed-slam.git
+cd ~/f1tenth_ws
+colcon build --packages-select zed_slam
 source install/setup.bash
 ```
 
 ---
 
 ## Usage
-NOTE: See [COMMAND.md](./COMMAND.md) for the step by step list of commands to run the full Roboracer stack.
-
-### Localization (existing map)
-
-```bash
-ros2 run zedx_pure_pursuit zed_slam.py --ros-args -p fps:=30 -p resolution:=SVGA -p area_file:=/home/nvidia/zed_ws/src/zedx_pure_pursuit/data/maps/test.area -p initial_mapping:=false -p update_map:=false
-```
-
-### Lifetime Mapping (adding to an existing map)
-
-```bash
-ros2 run zedx_pure_pursuit zed_slam.py --ros-args -p fps:=30 -p resolution:=SVGA -p area_file:=/home/nvidia/zed_ws/src/zedx_pure_pursuit/data/maps/test.area -p initial_mapping:=false -p update_map:=true
-```
-
+NOTE: See [COMMAND.md](./documentation/COMMAND.md) for the step by step list of commands to run the full Roboracer stack.
 
 ### Mapping (build new map)
+Follow the steps in [MAPPING.md](./documentation/MAPPING.md)
 
-```bash
-ros2 run zedx_pure_pursuit zed_slam.py --ros-args -p fps:=30 -p resolution:=SVGA -p area_file:=/home/nvidia/zed_ws/src/zedx_pure_pursuit/data/maps/test.area -p initial_mapping:=true -p update_map:=true
-```
+### Localization (existing map)
+Follow the steps in [LOCALIZATION.md](./documentation/LOCALIZATION.md)
+
+### Lifetime Mapping (adding to an existing map)
+There is a section on lifetime mapping in [LOCALIZATION.md](./documentation/LOCALIZATION.md)
+
 
 ### Recording .SVO2
 

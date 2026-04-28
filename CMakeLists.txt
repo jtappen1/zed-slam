@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(zedx_pure_pursuit)
+project(zed_slam)
 
 # Default to C++14
 if(NOT CMAKE_CXX_STANDARD)
@@ -44,7 +44,6 @@ install(PROGRAMS
   scripts/pure_pursuit/waypoints.py
   scripts/pure_pursuit/pure_pursuit_node.py
   scripts/utils/mesh_visualizer.py
-  scripts/utils/calc_hz.py
   scripts/zed_record.py
   scripts/zed_slam.py
   DESTINATION lib/${PROJECT_NAME}
