@@ -100,6 +100,19 @@ python zed_record.py --fps 30 --resolution SVGA --dir /path/to/output
 
 ---
 
+## Localization Metrics (AGX Orin)
+
+| Resolution | FPS | Pose Hz | CPU Usage | RAM Usage |
+|------------|-----|--------|----------|-----------|
+| SVGA       | 60  | ~40 Hz | 70–140% | ~2–3% |
+| SVGA       | 120 | ~25 Hz | 150–200+% | ~2–3% |
+| HD 1080    | 30  | ~30 Hz | 70–140% | ~2–3% |
+| HD 1080    | 60  | ~40 Hz | 100–140% | ~2–3% |
+| HD 1200    | 30  | ~25 Hz | 100–140% | ~2–3% |
+| HD 1200    | 60  | ~20 Hz | 150–200+% | ~2–3% |
+
+---
+
 ## Meshing
 
 The ZED SDK support generating high fidelity meshes through both on and offline spatial mapping. More documentation can be found in the [ZED Spatial Mapping docs](https://www.stereolabs.com/docs/spatial-mapping), but through testing accurate meshes have been created by recording a .svo2 file of the area and using Stereolab's ZEDfu application to perform offline spatial mapping of the area.  The best meshing is done by carrying the camera at stable height and walking slowly through the area. Through the .svo2 file and ZEDfu application, positional tracking is automatically calculated and can be used to create both area files and meshes of the area.
