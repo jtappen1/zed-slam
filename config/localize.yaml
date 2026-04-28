@@ -1,0 +1,18 @@
+/**:
+  ros__parameters:
+    # Camera Settings
+    fps: 60
+    resolution: "SVGA"  # Options: HD2K, HD1080, SVGA
+    depth_mode: "NEURAL_LIGHT"  # Options: NEURAL, NEURAL_LIGHT, NEURAL_PLUS
+
+    # Map / Area File
+    area_file: "/home/nvidia/ros2_ws/src/zedx_pure_pursuit/data/maps/test_svga_60.area"
+
+    # Mapping Mode
+    # initial_mapping: true  -> build a brand-new map
+    # initial_mapping: false -> localize on (or update) an existing map
+    initial_mapping: false
+
+    # update_map: true  -> lifetime mapping (append to existing map)
+    # update_map: false -> pure localization (read-only)
+    update_map: false

@@ -126,20 +126,20 @@ class Waypoints(Node):
         self.marker_pub.publish(marker)
     
     def on_shutdown(self, *args):
-        self.get_logger().info("Shutting down. Generating spline...")
+        self.get_logger().info("Shutting down. Saving waypoints...")
 
-        if len(self.points) < 2:
-            self.get_logger().warn("Not enough points to generate a spline.")
+        if not len(self.points):
+            self.get_logger().warn("Not enough waypoints saved.")
         else:
             points_np = np.array(self.points)
             x = points_np[:, 0]
             y = points_np[:, 1]
 
-            with open('spline_points.csv', 'w', newline='') as f:
+            with open('waypoints.csv', 'w', newline='') as f:
                 writer = csv.writer(f)
                 for xi, yi in zip(x, y):
                     writer.writerow([xi, yi])
-            self.get_logger().info(f"Spline generated and saved to spline_points.csv")
+            self.get_logger().info(f"Waypoints saved to waypoints.csv")
 
         rclpy.shutdown()
         sys.exit(0)

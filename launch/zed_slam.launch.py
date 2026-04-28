@@ -1,0 +1,81 @@
+"""
+zed_slam.launch.py
+==================
+Launches the zed_slam_node and loads all parameters from
+config/localize.yaml.
+
+Usage
+-----
+Default (localize with existing map):
+    ros2 launch zedx_pure_pursuit zed_slam.launch.py
+
+Override the mode at launch time without editing the yaml:
+    ros2 launch zedx_pure_pursuit zed_slam.launch.py mode:=mapping
+    ros2 launch zedx_pure_pursuit zed_slam.launch.py mode:=lifetime
+
+Supported modes
+---------------
+  localize  – pure localization on an existing .area file  (default)
+  lifetime  – lifetime mapping: extend an existing .area file
+  mapping   – build a brand-new map from scratch
+"""
+
+import os
+
+from ament_index_python.packages import get_package_share_directory
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument, OpaqueFunction
+from launch.substitutions import LaunchConfiguration
+from launch_ros.actions import Node
+
+
+# --------------------------------------------------------------------------- #
+# Mode → parameter overrides                                                  #
+# --------------------------------------------------------------------------- #
+MODE_OVERRIDES = {
+    'localize': {'initial_mapping': False, 'update_map': False},
+    'lifetime': {'initial_mapping': False, 'update_map': True},
+    'mapping':  {'initial_mapping': True,  'update_map': True},
+}
+
+
+def _launch_setup(context, *args, **kwargs):
+    pkg_share = get_package_share_directory('zedx_pure_pursuit')
+    config_file = os.path.join(pkg_share, 'config', 'localize.yaml')
+
+    mode = LaunchConfiguration('mode').perform(context)
+    if mode not in MODE_OVERRIDES:
+        raise ValueError(
+            f"Unknown mode '{mode}'. "
+            f"Valid options: {list(MODE_OVERRIDES.keys())}"
+        )
+
+    overrides = MODE_OVERRIDES[mode]
+
+    node = Node(
+        package='zedx_pure_pursuit',
+        executable='zed_slam.py',
+        name='zed_slam_node',
+        output='screen',
+        emulate_tty=True,
+        parameters=[
+            config_file,
+            overrides,
+        ],
+    )
+
+    return [node]
+
+
+def generate_launch_description():
+    return LaunchDescription([
+        DeclareLaunchArgument(
+            'mode',
+            default_value='localize',
+            description=(
+                'Operating mode: '
+                '"localize" (default) | "lifetime" | "mapping"'
+            ),
+        ),
+        OpaqueFunction(function=_launch_setup),
+    ])
