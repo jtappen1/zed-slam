@@ -41,8 +41,6 @@ ament_python_install_package(${PROJECT_NAME})
 
 # Install Python executables
 install(PROGRAMS
-  scripts/pure_pursuit/waypoints.py
-  scripts/pure_pursuit/pure_pursuit_node.py
   scripts/zed_record.py
   scripts/zed_slam.py
   DESTINATION lib/${PROJECT_NAME}
