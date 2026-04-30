@@ -16,3 +16,5 @@
     # update_map: true  -> lifetime mapping (append to existing map)
     # update_map: false -> pure localization (read-only)
     update_map: false
+
+    enable_localization_only : false

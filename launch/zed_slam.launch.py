@@ -33,9 +33,9 @@ from launch_ros.actions import Node
 # Mode → parameter overrides                                                  #
 # --------------------------------------------------------------------------- #
 MODE_OVERRIDES = {
-    'localize': {'initial_mapping': False, 'update_map': False},
-    'lifetime': {'initial_mapping': False, 'update_map': True},
-    'mapping':  {'initial_mapping': True,  'update_map': True},
+    'localize': {'initial_mapping': False, 'update_map': False, 'enable_localization_only' : True},
+    'lifetime': {'initial_mapping': False, 'update_map': True, 'enable_localization_only' : False},
+    'mapping':  {'initial_mapping': True,  'update_map': True, 'enable_localization_only' : False},
 }
 
 

@@ -11,8 +11,8 @@ import yaml
 import threading
 import time
 from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus
-from nav_msgs.msg import Path
-import copy
+from nav_msgs.msg import Path, Odometry
+from collections import deque
 
 MIN_DIST_SQ = 1.0 ** 2
 
@@ -44,6 +44,7 @@ class ZEDSLAMNode(Node):
         self.pose_pub = self.create_publisher(PoseStamped, '/zed/zed_node/pose', 10)
         self.status_pub = self.create_publisher(DiagnosticArray, '/zed/spatial_memory_status', 10)
         self.path_pub = self.create_publisher(Path, '/zed/path', 10)
+        self.odom_pub = self.create_publisher(Odometry, 'odom', 10)
 
         self.tf_broadcaster = TransformBroadcaster(self)
 
@@ -54,6 +55,8 @@ class ZEDSLAMNode(Node):
         self.declare_parameter('area_file', '')
         self.declare_parameter('initial_mapping', False)
         self.declare_parameter('update_map', True)
+        self.declare_parameter('enable_localization_only', False)
+
 
         self.fps = self.get_parameter('fps').value
         self.resolution = self.get_parameter('resolution').value
@@ -61,17 +64,12 @@ class ZEDSLAMNode(Node):
         self.initial_mapping = self.get_parameter('initial_mapping').value
         self.update_map = self.get_parameter('update_map').value
         self.depth_mode = self.get_parameter('depth_mode').value
+        self.enable_localization_only = self.get_parameter('enable_localization_only').value
 
-        # ---------------- Message Init ----------------
-        self.pose_msg = PoseStamped()
-        self.pose_msg.header.frame_id = "map"
-        self.tform = TransformStamped()
-        self.tform.header.frame_id = "map"
-        self.tform.child_frame_id = "zed_camera_link"
-        self.path_msg = Path()
-        self.path_msg.header.frame_id = "map"    
+        # ---------------- State ----------------
+        self.path_poses = deque(maxlen=500)
         self.last_mem_status = None
-        
+
         # ---------------- Camera Init ----------------
         self.zed = sl.Camera()
         init_params = sl.InitParameters()
@@ -92,13 +90,14 @@ class ZEDSLAMNode(Node):
         tracking_params.enable_area_memory = True
         tracking_params.enable_imu_fusion = True
         tracking_params.set_gravity_as_origin = True
-        tracking_params.enable_2d_ground_mode = False
-        tracking_params.enable_localization_only = False
+        tracking_params.enable_localization_only = self.enable_localization_only
 
         if self.area_file:
             if not self.initial_mapping:
                 tracking_params.area_file_path = self.area_file
                 self.get_logger().info(f"Loading Map with Area File: {self.area_file}")
+                if self.enable_localization_only:
+                    self.get_logger().info(f"Enabled Localization Only mode")
             else:
                 self.get_logger().info(f"Initial Mapping with Area File: {self.area_file}")
 
@@ -113,15 +112,11 @@ class ZEDSLAMNode(Node):
         self.get_logger().info("ZED Positional Tracking Node started")
 
     def _moved_enough(self, x, y, z):
-        if not self.path_msg.poses:
+        if not self.path_poses:
             return True
-        last = self.path_msg.poses[-1].pose.position
+        last = self.path_poses[-1].pose.position
         dx, dy, dz = x - last.x, y - last.y, z - last.z
         return dx*dx + dy*dy + dz*dz > MIN_DIST_SQ
-
-    def publish_path(self):
-        self.path_msg.header.stamp = self.get_clock().now().to_msg()
-        self.path_pub.publish(self.path_msg)
 
     def grab_loop(self):
         while self.running and rclpy.ok():
@@ -132,65 +127,112 @@ class ZEDSLAMNode(Node):
             if state != sl.POSITIONAL_TRACKING_STATE.OK:
                 self.get_logger().warn_once("Tracking lost")
                 continue
-            
+
             mem_status = self.zed.get_positional_tracking_status().spatial_memory_status
 
             if mem_status != self.last_mem_status:
                 self.get_logger().info(f"Memory status changed: {STATUS_MAP.get(mem_status, 'UNKNOWN')}")
                 self.last_mem_status = mem_status
 
-            #--------- Mapping Status Publish -------------
-            msg = DiagnosticArray()
-            msg.header.stamp = self.get_clock().now().to_msg()
-            status = DiagnosticStatus()
-            status.message = STATUS_MAP.get(mem_status, "UNKNOWN")
-            msg.status = [status]
-            self.status_pub.publish(msg)
-
-            # ---------------- Pose Publish ----------------
+            # Extract pose data
             t = self.pose.get_translation(sl.Translation())
             x, y, z = t.get()
             o = self.pose.get_orientation(sl.Orientation())
             x_or, y_or, z_or, w_or = o.get()
 
             stamp = self.get_clock().now().to_msg()
-            self.pose_msg.header.stamp = stamp
-            self.pose_msg.pose.position.x = x
-            self.pose_msg.pose.position.y = y
-            self.pose_msg.pose.position.z = z
-            self.pose_msg.pose.orientation.x = x_or
-            self.pose_msg.pose.orientation.y = y_or
-            self.pose_msg.pose.orientation.z = z_or
-            self.pose_msg.pose.orientation.w = w_or
 
-            self.pose_pub.publish(self.pose_msg)
+            # ---------------- Diagnostic Publish ----------------
+            diag_status = DiagnosticStatus()
+            diag_status.message = STATUS_MAP.get(mem_status, "UNKNOWN")
+
+            diag_msg = DiagnosticArray()
+            diag_msg.header.stamp = stamp
+            diag_msg.status = [diag_status]
+
+            self.status_pub.publish(diag_msg)
+
+            # ---------------- Pose Publish ----------------
+            pose_msg = PoseStamped()
+            pose_msg.header.stamp = stamp
+            pose_msg.header.frame_id = "map"
+            pose_msg.pose.position.x = x
+            pose_msg.pose.position.y = y
+            pose_msg.pose.position.z = z
+            pose_msg.pose.orientation.x = x_or
+            pose_msg.pose.orientation.y = y_or
+            pose_msg.pose.orientation.z = z_or
+            pose_msg.pose.orientation.w = w_or
+
+            self.pose_pub.publish(pose_msg)
+
+            # ---------------- Odom Publish ----------------
+            odom_msg = Odometry()
+            odom_msg.header.stamp = stamp
+            odom_msg.header.frame_id = "odom"
+            odom_msg.child_frame_id = "base_link"
+            odom_msg.pose.pose.position.x = x
+            odom_msg.pose.pose.position.y = y
+            odom_msg.pose.pose.position.z = z
+            odom_msg.pose.pose.orientation.x = x_or
+            odom_msg.pose.pose.orientation.y = y_or
+            odom_msg.pose.pose.orientation.z = z_or
+            odom_msg.pose.pose.orientation.w = w_or
+            odom_msg.pose.covariance = self.pose.pose_covariance.flatten().tolist()
+
+            twist_pose = sl.Pose()
+            self.zed.get_position(twist_pose, sl.REFERENCE_FRAME.CAMERA)
+
+            lin_vel = twist_pose.twist[0:3]
+            ang_vel = twist_pose.twist[3:6]
+
+            odom_msg.twist.twist.linear.x = lin_vel[0]
+            odom_msg.twist.twist.linear.y = lin_vel[1]
+            odom_msg.twist.twist.linear.z = lin_vel[2]
+            odom_msg.twist.twist.angular.x = ang_vel[0]
+            odom_msg.twist.twist.angular.y = ang_vel[1]
+            odom_msg.twist.twist.angular.z = ang_vel[2]
+            odom_msg.twist.covariance = twist_pose.twist_covariance.flatten().tolist()
+
+            # self.odom_pub.publish(odom_msg)
 
             # ---------------- Transform Publish ----------------
-            self.tform.header.stamp = stamp
-            self.tform.transform.translation.x = x
-            self.tform.transform.translation.y = y
-            self.tform.transform.translation.z = z
-            self.tform.transform.rotation = self.pose_msg.pose.orientation
+            tform = TransformStamped()
+            tform.header.stamp = stamp
+            tform.header.frame_id = "map"
+            tform.child_frame_id = "zed_camera_link"
+            tform.transform.translation.x = x
+            tform.transform.translation.y = y
+            tform.transform.translation.z = z
+            tform.transform.rotation.x = x_or
+            tform.transform.rotation.y = y_or
+            tform.transform.rotation.z = z_or
+            tform.transform.rotation.w = w_or
 
-            self.tf_broadcaster.sendTransform(self.tform)
+            self.tf_broadcaster.sendTransform(tform)
 
-            self.path_msg.poses = self.path_msg.poses[-500:]
+            # ---------------- Path Publish ----------------
+            self.path_poses = self.path_poses
 
             if self._moved_enough(x, y, z):
-                self.path_msg.poses.append(copy.deepcopy(self.pose_msg))
-                self.publish_path()
+                self.path_poses.append(pose_msg)
 
+                path_msg = Path()
+                path_msg.header.stamp = self.get_clock().now().to_msg()
+                path_msg.header.frame_id = "map"
+                path_msg.poses = list(self.path_poses)
+
+                self.path_pub.publish(path_msg)
 
     # ---------------- Shutdown ----------------
     def destroy_node(self):
         self.running = False
         self.grab_thread.join()
-        
+
         if self.update_map and self.area_file:
             self.get_logger().info("Saving area map before shutdown...")
             self.zed.save_area_map(self.area_file)
 
-        self.grab_thread.join()
         self.zed.disable_positional_tracking()
         self.zed.close()
         super().destroy_node()
