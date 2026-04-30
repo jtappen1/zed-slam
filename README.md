@@ -12,11 +12,11 @@ Language:   Python 3 & C++
   
 ## Overview
 
-This repo contains a lightweight and minimal implementation of VSLAM and meshing with the Stereolabs ZED cameras, set up to work with the Roboracer (previously F1Tenth) platform.  It a robust 3D localization solution for the Roboracer platform.  Due to the edge compute constraints of the Roboracer platform, this package contains the minimal stack needed to allow mapping/localization with ZED cameras.  For those needing more comprehensive topics and fine-grain control, the [ZED ROS2 wrapper](https://github.com/stereolabs/zed-ros2-wrapper) provides that support at the cost of higher compute.  This repo also details integration with other F1Tenth systems needed to run a full autonomy stack on the Roboracer platform. Information on setting up the ZED hardware can be found in the [SETUP.md](./documentation/SETUP.md) file.  ZED SDK documentation can be found [here](https://www.stereolabs.com/docs/zed-ecosystem).
+This repo contains a lightweight and minimal implementation of VSLAM and meshing with the Stereolabs ZED cameras, set up to work with the Roboracer (previously F1Tenth) platform.  It provides a robust 3D localization solution that can be switched out with other Roboracer integrations (f1tenth Particle Filter).  Due to the edge compute constraints of the Roboracer platform, this package contains the minimal stack needed to allow mapping/localization with ZED cameras, while also providing and improved visualization metrics.  For those needing more comprehensive topics and fine-grain control, the [ZED ROS2 wrapper](https://github.com/stereolabs/zed-ros2-wrapper) provides that support at the cost of higher compute. Information on setting up the ZED hardware can be found in the [SETUP.md](./documentation/SETUP.md) file.  ZED SDK documentation can be found [here](https://www.stereolabs.com/docs/zed-ecosystem).
   
 <p align="center">
   <img src="./data/img/f1tenth.jpeg" width="40%"/><br/>
-  <em>F1Tenth car with mounted ZEDX.</em>
+  <em>F1Tenth car with mounted ZEDX Camera.</em>
 </p>
 
 ---
@@ -35,6 +35,7 @@ This repo contains a lightweight and minimal implementation of VSLAM and meshing
 | `area_file` | string | `''` | Path to `.area` map file |
 | `initial_mapping` | bool | `false` | If true, builds a new map instead of localizing on provided area file|
 | `update_map` | bool | `false` | If true, saves/updates area file after mapping/localization is completed|
+| `enable_localization_only` | bool | `false` | If true, does not update the map with new poses when localizing.|
 
 
 **Published Topics**
@@ -44,6 +45,7 @@ This repo contains a lightweight and minimal implementation of VSLAM and meshing
 | `/zed/zed_node/pose` | `geometry_msgs/PoseStamped` | Camera pose in map frame |
 | `/zed/spatial_memory_status` | `diagnostic_msgs/DiagnosticArray` | Spatial memory state changes |
 | `/zed/path` | `nav_msgs/msg/Path` | Path taken when mapping/localizing
+|`/odom` | `nav_msgs/msg/OdometryMessage` | Odometry message for camera link, pose with covariance, velocity, twist|
 
 **Broadcast Transforms**
 

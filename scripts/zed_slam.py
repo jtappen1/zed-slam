@@ -194,7 +194,7 @@ class ZEDSLAMNode(Node):
             odom_msg.twist.twist.angular.z = ang_vel[2]
             odom_msg.twist.covariance = twist_pose.twist_covariance.flatten().tolist()
 
-            # self.odom_pub.publish(odom_msg)
+            self.odom_pub.publish(odom_msg)
 
             # ---------------- Transform Publish ----------------
             tform = TransformStamped()

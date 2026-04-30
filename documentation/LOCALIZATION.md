@@ -75,12 +75,12 @@ https://www.stereolabs.com/docs/positional-tracking/positional-tracking-status#s
 
 ## 4. Localization Procedure
 
--   On startup, the system begins in `INITIALIZING`
+-   On startup, the system begins in `INITIALIZING`.  If it has been more than 30 second with the mode still stuck in localization, guide the vehicle to an area with better feature coverage that it has seen before.  Continue this until you see `KNOW_MAP`.
 -   Once it transitions to `KNOWN_MAP`, begin driving along a path
     similar to your mapping trajectory
 
-If the state switches to `MAP_UPDATE`, the environment likely needs
-additional mapping.
+If the state switches to `LOST`, the environment likely needs
+additional mapping in that area.
 
 To extend the map, run:
 
